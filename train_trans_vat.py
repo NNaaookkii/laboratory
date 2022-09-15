@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 from vat_loss import VATLoss
 from vat_loss import MAVATLoss
 
+print("hello")
 def structure_loss(pred, mask):
     weit = 1 + 5 * torch.abs(F.avg_pool2d(mask, kernel_size=31, stride=1, padding=15) - mask)
     wbce = F.binary_cross_entropy_with_logits(pred, mask, reduce='none')
