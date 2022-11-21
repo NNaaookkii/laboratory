@@ -60,7 +60,8 @@ class Decoder(nn.Module):
         h = torch.relu(self.fc(z))
         output = torch.sigmoid(self.fc_output(h))
         return output
-    
+
+
 # VAEのモデル作成
 class VAE(nn.Module):
     def __init__(self, input_dim, hidden_dim, latent_dim):
@@ -113,6 +114,8 @@ for epoch in range(num_epochs):
             print(f'Epoch: {epoch+1}, loss: {loss: 0.4f}, reconstruct loss: {recon_loss: 0.4f}, KL loss: {kl_loss: 0.4f}')
         losses.append(loss)    
         
+
+
 # 画像の生成
 model.eval()
 
