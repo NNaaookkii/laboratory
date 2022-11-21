@@ -46,7 +46,7 @@ class VAE(nn.Module):
         y = torch.sigmoid(self.fc4(y)) # 各要素にシグモイド関数を適用し、値を(0,1)の範囲に
         return y
     def forward(self, x, device):
-        x = x.view(selfk, x, device)
+        x = x.view(self, x_dim)
         mean, log_var = self.encoder(x) # 画像xを入力して、平均・分散を出力
         KL = 0.5 * torch.sum(1+log_var - mean**2 - torch.exp(log_var)) # KL[q(z|x)||p(z)]を計算
         z = self.reparametrizaion(mean, log_var, device) # 潜在ベクトルをサンプリング(再パラメータ化)
