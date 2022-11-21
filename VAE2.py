@@ -85,7 +85,7 @@ for i in range(num_epochs):
 fig = plt.figure(figsize=(20,4))
 model.eval()
 zs = []
-for x, t in dataloader_valid:
+for x, t in val_loader:
     for i, im in enumerate(x.view(-1,28,28).detach().numpy()[:10]):
         # 元画像を可視化
         ax = fig.add_subplot(2, 10, i+1, xticks=[], yticks=[])
