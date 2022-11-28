@@ -11,15 +11,15 @@ from torch.autograd import Variable
 
 from lib.U_PraNet_Res2Net import U_PraNet
 
-from lib.trans_unet.vit_seg_modeling import VisionTransformer as ViT_seg
-from lib.trans_unet.vit_seg_modeling import CONFIGS as CONFIGS_ViT_seg
-from lib.ResUPraNet import ResUPraNet
+# from lib.trans_unet.vit_seg_modeling import VisionTransformer as ViT_seg
+# from lib.trans_unet.vit_seg_modeling import CONFIGS as CONFIGS_ViT_seg
+# from lib.ResUPraNet import ResUPraNet
 
 from utils.dataloader import get_loader
 from utils.utils import clip_gradient, adjust_lr, AvgMeter
 import numpy as np
 from adabelief_pytorch import AdaBelief
-from sam import SAM
+# from sam import SAM
 
 
 def structure_loss(pred, mask):
@@ -112,7 +112,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float,
                         default=1e-4, help='learning rate')
     parser.add_argument('--batchsize', type=int,
-                        default=16, help='training batch size')
+                        default=4, help='training batch size')
     parser.add_argument('--trainsize', type=int,
                         default=352, help='training dataset size')
     parser.add_argument('--clip', type=float,
@@ -198,7 +198,9 @@ if __name__ == '__main__':
         # train(train_loader, model, optimizer, epoch)
         epoch, train_loss, val_loss, best_loss = train(dataloaders_dict, model, optimizer, epoch, best_loss)
         epoch_list.append(epoch)
+        train_loss = train_loss.cpu().data.numpy()
         train_loss_list.append(train_loss)
+        val_loss = val_loss.cpu().data.numpy()
         val_loss_list.append(val_loss)
 
     elapsed_time = time.time() - start

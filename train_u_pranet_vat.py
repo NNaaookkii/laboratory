@@ -11,15 +11,15 @@ from torch.autograd import Variable
 
 from lib.U_PraNet_Res2Net import U_PraNet
 
-from lib.trans_unet.vit_seg_modeling import VisionTransformer as ViT_seg
-from lib.trans_unet.vit_seg_modeling import CONFIGS as CONFIGS_ViT_seg
-from lib.ResUPraNet import ResUPraNet
+# from lib.trans_unet.vit_seg_modeling import VisionTransformer as ViT_seg
+# from lib.trans_unet.vit_seg_modeling import CONFIGS as CONFIGS_ViT_seg
+# from lib.ResUPraNet import ResUPraNet
 
 from utils.dataloader import get_loader
 from utils.utils import clip_gradient, adjust_lr, AvgMeter
 import numpy as np
 from adabelief_pytorch import AdaBelief
-from sam import SAM
+# from sam import SAM
 
 from vat_loss import VATLoss
 from vat_loss import MAVATLoss
@@ -37,12 +37,12 @@ def structure_loss(pred, mask):
     return (wbce + wiou).mean()
 
 
-def train(dataloaders_dict, model, optimizer, epoch, best_loss):
+def train(dataloaders_dict, model, optimizer, epoch, best_loss, vat_alpha, vat_eps):
     # load vat_loss
-    val_loss = MAVATLoss(eps=vat_eps, xi=1e-6, ip=0)
-    #val_loss = VATLoss(eps=vat_eps, xi=1e-6, ip=0)  ip= : RPT
-    alpha = vat_alpha #1.0
-    val_loss = 0
+    vat_loss = MAVATLoss(eps=vat_eps, xi=1e-6, ip=0)
+    # val_loss = VATLoss(eps=vat_eps, xi=1e-6, ip=0)  ip= : RPT
+    alpha = vat_alpha  # 1.0
+    # vat_loss = 0
     for phase in ['train', 'val']:
         if phase == 'train':
             model.train()
@@ -82,7 +82,7 @@ def train(dataloaders_dict, model, optimizer, epoch, best_loss):
                         loss = normal_loss + alpha * lds
                     else:
                         loss = normal_loss
-                    
+
                     # ---- backward ----
                     if phase == 'train':
                         loss.backward()
@@ -127,7 +127,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float,
                         default=1e-4, help='learning rate')
     parser.add_argument('--batchsize', type=int,
-                        default=16, help='training batch size')
+                        default=2, help='training batch size')
     parser.add_argument('--trainsize', type=int,
                         default=352, help='training dataset size')
     parser.add_argument('--clip', type=float,
@@ -146,6 +146,8 @@ if __name__ == '__main__':
                         default='./dataset/sekkai_ValDataset', help='path to val dataset')
     parser.add_argument('--train_save', type=str,
                         default='PraNet_Res2Net')
+    parser.add_argument('--vat_alpha', type=float, default=1.0, help='alpha of vat loss')
+    parser.add_argument('--vat_eps', type=float, default=0.1, help='epsilon of vat loss')
     opt = parser.parse_args()
 
     # ---- build models ----
@@ -191,8 +193,8 @@ if __name__ == '__main__':
     image_root_val = '{}/images/'.format(opt.val_path)
     gt_root_val = '{}/masks/'.format(opt.val_path)
 
-    # train_loader = get_loader(image_root, gt_root, batchsize=opt.batchsize, trainsize=opt.trainsize, droplast=True)
-    train_loader = get_loader(image_root, gt_root, batchsize=opt.batchsize, trainsize=opt.trainsize)
+    train_loader = get_loader(image_root, gt_root, batchsize=opt.batchsize, trainsize=opt.trainsize, droplast=True)
+    # train_loader = get_loader(image_root, gt_root, batchsize=opt.batchsize, trainsize=opt.trainsize)
 
     total_step = len(train_loader)
 
@@ -211,9 +213,12 @@ if __name__ == '__main__':
     for epoch in range(1, opt.epoch):
         adjust_lr(optimizer, opt.lr, epoch, opt.decay_rate, opt.decay_epoch)
         # train(train_loader, model, optimizer, epoch)
-        epoch, train_loss, val_loss, best_loss = train(dataloaders_dict, model, optimizer, epoch, best_loss)
+        epoch, train_loss, val_loss, best_loss = train(dataloaders_dict, model, optimizer, epoch, best_loss,
+                                                       opt.vat_alpha, opt.vat_eps)
         epoch_list.append(epoch)
+        train_loss = train_loss.cpu().data.numpy()
         train_loss_list.append(train_loss)
+        val_loss = val_loss.cpu().data.numpy()
         val_loss_list.append(val_loss)
 
     elapsed_time = time.time() - start
@@ -226,6 +231,6 @@ if __name__ == '__main__':
     plt.ylabel('loss')
     plt.xlim(left=0)
     plt.legend(loc='upper right')
-    plt.show()
+    # plt.show()
 
     fig.savefig("fig/img.png")
